@@ -1,11 +1,11 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import { globalErrorHandler } from "./common/middlewares/globalErrorHandler";
+import customerRouter from "./customer/customerRouter";
 
 const app = express();
 
-app.get("/", (req: Request, res: Response) => {
-    res.send("Hello World!");
-});
+//routes
+app.use("/customer", customerRouter);
 
 app.use(globalErrorHandler);
 
