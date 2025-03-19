@@ -1,7 +1,29 @@
 import { Request, Response } from "express";
+import { AuthRequest } from "../types";
+import { CustomerService } from "./customerService";
 
 export class CustomerController {
+    constructor(private customerService: CustomerService) {}
     async getCustomer(req: Request, res: Response) {
-        res.json({ message: "Get customer" });
+        const {
+            sub: userId,
+            firstName,
+            lastName,
+            email,
+        } = (req as AuthRequest).auth;
+
+        const customer = await this.customerService.getCustomer(userId);
+        if (!customer) {
+            const newCustomer = await this.customerService.createCustomer({
+                userId,
+                firstName,
+                lastName,
+                email,
+                addresses: [],
+            });
+
+            return res.json(newCustomer);
+        }
+        res.json(customer);
     }
 }
