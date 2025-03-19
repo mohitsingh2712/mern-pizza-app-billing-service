@@ -10,3 +10,7 @@ export interface AuthRequest extends Request {
         email: string;
     };
 }
+
+export interface UpdateAddressRequest extends Request {
+    address: string;
+}

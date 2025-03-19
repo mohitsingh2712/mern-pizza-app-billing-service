@@ -11,4 +11,9 @@ router.get(
     authenticate,
     asyncWraper(customerController.getCustomer.bind(customerController)),
 );
+router.patch(
+    "/addresses/:id",
+    authenticate,
+    asyncWraper(customerController.addAdress.bind(customerController)),
+);
 export default router;

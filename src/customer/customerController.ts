@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AuthRequest } from "../types";
+import { AuthRequest, UpdateAddressRequest } from "../types";
 import { CustomerService } from "./customerService";
 
 export class CustomerController {
@@ -24,6 +24,18 @@ export class CustomerController {
 
             return res.json(newCustomer);
         }
+        res.json(customer);
+    }
+    async addAdress(req: Request, res: Response) {
+        const { sub: userId } = (req as AuthRequest).auth;
+        const address = (req.body as UpdateAddressRequest).address;
+
+        const customer =
+            await this.customerService.findCustomerAndUpdateAddress(
+                req.params.id,
+                userId,
+                address,
+            );
         res.json(customer);
     }
 }
