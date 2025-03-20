@@ -3,6 +3,7 @@ import { CouponService } from "./couponService";
 import { CouponController } from "./couponController";
 import authenticate from "../common/middlewares/authenticate";
 import couponValidator from "./couponValidator";
+import { asyncWraper } from "../common/utils/asyncWrapper";
 
 const couponserviec = new CouponService();
 const couponController = new CouponController(couponserviec);
@@ -12,7 +13,23 @@ router.post(
     "/",
     authenticate,
     couponValidator,
-    couponController.createCoupon.bind(couponController),
+    asyncWraper(couponController.createCoupon.bind(couponController)),
+);
+router.put(
+    "/:id",
+    authenticate,
+    couponValidator,
+    asyncWraper(couponController.updateCoupon.bind(couponController)),
+);
+router.get(
+    "/",
+    authenticate,
+    asyncWraper(couponController.getAllCoupon.bind(couponController)),
+);
+router.delete(
+    "/:id",
+    authenticate,
+    asyncWraper(couponController.deleteCoupon.bind(couponController)),
 );
 
 export default router;
