@@ -22,4 +22,10 @@ export class CouponService {
     async getAllTenantCoupons(tenant: number): Promise<ICoupon[]> {
         return await Coupon.find({ tenantId: tenant });
     }
+    async getCouponByCodeAndTenantId(
+        code: string,
+        tenantId: number,
+    ): Promise<ICoupon | null> {
+        return await Coupon.findOne({ code, tenantId });
+    }
 }

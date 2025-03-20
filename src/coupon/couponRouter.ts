@@ -31,5 +31,9 @@ router.delete(
     authenticate,
     asyncWraper(couponController.deleteCoupon.bind(couponController)),
 );
+router.post(
+    "/verify",
+    asyncWraper(couponController.verifyCoupon.bind(couponController)),
+);
 
 export default router;
