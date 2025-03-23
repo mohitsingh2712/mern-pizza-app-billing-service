@@ -1,6 +1,7 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { AuthRequest, UpdateAddressRequest } from "../types";
 import { CustomerService } from "./customerService";
+import createHttpError from "http-errors";
 
 export class CustomerController {
     constructor(private customerService: CustomerService) {}
@@ -26,9 +27,13 @@ export class CustomerController {
         }
         res.json(customer);
     }
-    async addAdress(req: Request, res: Response) {
+    async addAdress(req: Request, res: Response, next: NextFunction) {
         const { sub: userId } = (req as AuthRequest).auth;
         const address = (req.body as UpdateAddressRequest).address;
+        if (!address) {
+            const error = createHttpError(400, "Address is required");
+            return next(error);
+        }
 
         const customer =
             await this.customerService.findCustomerAndUpdateAddress(
