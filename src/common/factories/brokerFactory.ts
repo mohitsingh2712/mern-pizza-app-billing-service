@@ -5,10 +5,9 @@ let broker: MessageBroker | null = null;
 export const createMessageBroker = (): MessageBroker => {
     if (!broker) {
         // making this instance singleton
-        broker = new KafkaBroker(
-            "billing-service",
+        broker = new KafkaBroker("billing-service", [
             config.get("kafka.brokers"),
-        );
+        ]);
     }
     return broker;
 };
