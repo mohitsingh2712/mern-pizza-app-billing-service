@@ -13,8 +13,8 @@ export class KafkaBroker implements MessageBroker {
     async disconnectConsumer() {
         await this.consumer.disconnect();
     }
-    async consumeMessage(topic: string, fromBegining: boolean = false) {
-        await this.consumer.subscribe({ topic, fromBeginning: fromBegining });
+    async consumeMessage(topics: string[], fromBegining: boolean = false) {
+        await this.consumer.subscribe({ topics, fromBeginning: fromBegining });
         await this.consumer.run({
             eachMessage: async ({
                 topic,
