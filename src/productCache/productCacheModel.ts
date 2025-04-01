@@ -16,7 +16,7 @@ const priceConfigurationSchema = new mongoose.Schema({
     },
     availableOptions: {
         type: Object,
-        of: Number, // ✅ Correctly defining a Map of numbers
+        of: Number,
     },
 });
 const productCacheSchema = new mongoose.Schema<IProductPricingCache>({
