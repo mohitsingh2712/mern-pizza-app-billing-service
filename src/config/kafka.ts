@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-console */
 import { Consumer, EachMessagePayload, Kafka } from "kafkajs";
 import { MessageBroker } from "../types/broker";
+import { handleProductUpdate } from "../productCache/productUpdateHandler";
 
 export class KafkaBroker implements MessageBroker {
     private consumer: Consumer;
@@ -21,12 +24,15 @@ export class KafkaBroker implements MessageBroker {
                 partition,
                 message,
             }: EachMessagePayload) => {
-                // eslint-disable-next-line no-console
-                console.log({
-                    topic,
-                    partition,
-                    value: message.value!.toString(),
-                });
+                switch (topic) {
+                    case "product":
+                        await handleProductUpdate(message.value?.toString());
+                        return;
+                    default:
+                        console.log(
+                            `Received message from ${topic}: ${message.value?.toString()}`,
+                        );
+                }
             },
         });
     }
