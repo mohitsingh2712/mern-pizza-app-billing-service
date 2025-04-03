@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 
 export interface IToppingCache {
-    name: string;
     price: number;
     tenantId: string;
+    toppingId: string;
 }
 
 const ToppingCacheSchema = new mongoose.Schema<IToppingCache>(
     {
-        name: {
+        toppingId: {
             type: String,
             required: true,
         },
