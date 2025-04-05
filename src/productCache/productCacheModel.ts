@@ -1,13 +1,15 @@
 import mongoose from "mongoose";
+import { ProductPriceConfiguration } from "../types";
 
+export interface PriceConfiguration {
+    priceType: "base" | "aditional";
+    availableOptions: {
+        [key: string]: number;
+    };
+}
 export interface IProductPricingCache {
     productId: string;
-    priceConfiguration: {
-        priceType: "base" | "additional";
-        availableOptions: {
-            [key: string]: number;
-        };
-    };
+    priceConfiguration: ProductPriceConfiguration;
 }
 const priceConfigurationSchema = new mongoose.Schema({
     priceType: {
