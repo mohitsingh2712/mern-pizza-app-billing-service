@@ -1,19 +1,30 @@
 /* eslint-disable no-console */
 import { Response } from "express";
 import { Request } from "express-jwt";
-import { ICartItem, ITopping } from "../types";
+import { ICartItem, ITopping, OrderRequest } from "../types";
 import {
     IProductPricingCache,
     ProductPricingCache,
 } from "../productCache/productCacheModel";
 import { IToppingCache, ToppingCache } from "../toppingCache/toppingCacheModel";
+import { CouponService } from "../coupon/couponService";
 
 export class OrderCotroller {
+    constructor(private couponService: CouponService) {}
     async create(req: Request, res: Response) {
-        const body = req.body as { cart: ICartItem[] };
+        const body = req.body as OrderRequest;
         const totalPrice = await this.calculateTotalPrice(body.cart);
-        console.log(totalPrice);
-        return res.json("success");
+        let discount = 0;
+        if (body.couponCode) {
+            discount = await this.calculateDiscount(
+                body.couponCode,
+                body.tenantId,
+            );
+        }
+        const discountAmount = Math.round((totalPrice * discount) / 100);
+        const priceAfterDiscount = totalPrice - discountAmount;
+
+        return res.json({ priceAfterDiscount });
     }
 
     private async calculateTotalPrice(cart: ICartItem[]) {
@@ -83,5 +94,22 @@ export class OrderCotroller {
             return topping.price;
         }
         return toppingPrice.price;
+    }
+    private async calculateDiscount(couponCode: string, tenantId: string) {
+        const coupon = await this.couponService.getCouponByCodeAndTenantId(
+            couponCode,
+            Number(tenantId),
+        );
+
+        if (!coupon) {
+            return 0;
+        }
+
+        // Check if coupon is valid
+        if (new Date(coupon.validUpto) < new Date()) {
+            return 0;
+        }
+
+        return coupon.discount;
     }
 }

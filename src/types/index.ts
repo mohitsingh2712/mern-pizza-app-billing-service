@@ -47,3 +47,13 @@ export interface ICartItem
     };
     qty: number;
 }
+
+export interface OrderRequest {
+    cart: ICartItem[];
+    couponCode: string;
+    tenantId: string;
+    comment: string;
+    address: string;
+    customerId: string;
+    paymentMode: string;
+}
