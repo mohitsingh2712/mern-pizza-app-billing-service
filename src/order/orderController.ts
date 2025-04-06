@@ -14,6 +14,7 @@ import {
     PaymentModeEnum,
     PaymentStatusEnum,
 } from "./orderTypes";
+import { validationResult } from "express-validator";
 
 export class OrderCotroller {
     constructor(
@@ -21,6 +22,11 @@ export class OrderCotroller {
         private orderService: OrderService,
     ) {}
     async create(req: Request, res: Response) {
+        const result = validationResult(req);
+        if (!result.isEmpty()) {
+            res.status(400).json({ errors: result.array() });
+            return;
+        }
         const body = req.body as OrderRequest;
         const {
             cart,
