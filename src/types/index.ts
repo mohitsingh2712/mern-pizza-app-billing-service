@@ -1,4 +1,5 @@
 import { Request } from "express";
+import { ObjectId } from "mongoose";
 
 export interface AuthRequest extends Request {
     auth: {
@@ -54,6 +55,6 @@ export interface OrderRequest {
     tenantId: string;
     comment: string;
     address: string;
-    customerId: string;
+    customerId: ObjectId;
     paymentMode: string;
 }

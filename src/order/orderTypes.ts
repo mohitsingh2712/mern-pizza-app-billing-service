@@ -20,6 +20,7 @@ export enum PaymentStatusEnum {
 }
 
 export interface IOrder {
+    _id?: ObjectId;
     cart: ICartItem[];
     customerId: ObjectId;
     total: number;

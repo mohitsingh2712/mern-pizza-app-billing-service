@@ -8,14 +8,32 @@ import {
 } from "../productCache/productCacheModel";
 import { IToppingCache, ToppingCache } from "../toppingCache/toppingCacheModel";
 import { CouponService } from "../coupon/couponService";
+import { OrderService } from "./orderService";
+import {
+    OrderStatusEnum,
+    PaymentModeEnum,
+    PaymentStatusEnum,
+} from "./orderTypes";
 
 export class OrderCotroller {
-    constructor(private couponService: CouponService) {}
+    constructor(
+        private couponService: CouponService,
+        private orderService: OrderService,
+    ) {}
     async create(req: Request, res: Response) {
         const body = req.body as OrderRequest;
-        const totalPrice = await this.calculateTotalPrice(body.cart);
+        const {
+            cart,
+            couponCode,
+            tenantId,
+            paymentMode,
+            customerId,
+            comment,
+            address,
+        } = body;
+        const totalPrice = await this.calculateTotalPrice(cart);
         let discount = 0;
-        if (body.couponCode) {
+        if (couponCode) {
             discount = await this.calculateDiscount(
                 body.couponCode,
                 body.tenantId,
@@ -29,8 +47,23 @@ export class OrderCotroller {
             (priceAfterDiscount * TAXES_PERCENT) / 100,
         );
         const finalPrice = priceAfterDiscount + taxesAmount + DELIVERY_CHARGES;
+        const newOrder = await this.orderService.createOrder({
+            cart,
+            address,
+            comment,
+            customerId,
+            deliveryCharges: DELIVERY_CHARGES,
+            discount: discountAmount,
+            taxes: taxesAmount,
+            total: finalPrice,
+            tenantId,
+            orderStatus: OrderStatusEnum.RECEIVED,
+            paymentMode:
+                PaymentModeEnum[paymentMode as keyof typeof PaymentModeEnum],
+            paymentStatus: PaymentStatusEnum.PENDING,
+        });
 
-        return res.json({ finalPrice, taxesAmount });
+        return res.json({ id: newOrder._id });
     }
 
     private async calculateTotalPrice(cart: ICartItem[]) {
