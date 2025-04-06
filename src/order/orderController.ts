@@ -23,8 +23,14 @@ export class OrderCotroller {
         }
         const discountAmount = Math.round((totalPrice * discount) / 100);
         const priceAfterDiscount = totalPrice - discountAmount;
+        const TAXES_PERCENT = 18;
+        const DELIVERY_CHARGES = 100;
+        const taxesAmount = Math.round(
+            (priceAfterDiscount * TAXES_PERCENT) / 100,
+        );
+        const finalPrice = priceAfterDiscount + taxesAmount + DELIVERY_CHARGES;
 
-        return res.json({ priceAfterDiscount });
+        return res.json({ finalPrice, taxesAmount });
     }
 
     private async calculateTotalPrice(cart: ICartItem[]) {
