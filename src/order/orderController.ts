@@ -15,11 +15,14 @@ import {
     PaymentStatusEnum,
 } from "./orderTypes";
 import { validationResult } from "express-validator";
+import { IdempotencyService } from "../idempotency/idempotencyService";
+import createHttpError from "http-errors";
 
 export class OrderCotroller {
     constructor(
         private couponService: CouponService,
         private orderService: OrderService,
+        private idempotencyService: IdempotencyService,
     ) {}
     async create(req: Request, res: Response) {
         const result = validationResult(req);
@@ -27,6 +30,18 @@ export class OrderCotroller {
             res.status(400).json({ errors: result.array() });
             return;
         }
+        const idempotencyKey = req.headers["idempotency-key"];
+        if (!idempotencyKey) {
+            const err = createHttpError(400, "Idempotency key is required");
+            throw err;
+        }
+        const idempotency = await this.idempotencyService.getIdempotencyKey(
+            idempotencyKey[0],
+        );
+        console.log(idempotency);
+        // if (!idempotency) {
+        //     await this.idempotencyService.createIdempotencyKey(idempotencyKey[0]);
+        // }
         const body = req.body as OrderRequest;
         const {
             cart,
