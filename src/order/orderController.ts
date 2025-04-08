@@ -10,6 +10,7 @@ import { IToppingCache, ToppingCache } from "../toppingCache/toppingCacheModel";
 import { CouponService } from "../coupon/couponService";
 import { OrderService } from "./orderService";
 import {
+    IOrder,
     OrderStatusEnum,
     PaymentModeEnum,
     PaymentStatusEnum,
@@ -17,6 +18,7 @@ import {
 import { validationResult } from "express-validator";
 import { IdempotencyService } from "../idempotency/idempotencyService";
 import createHttpError from "http-errors";
+import mongoose from "mongoose";
 
 export class OrderCotroller {
     constructor(
@@ -30,18 +32,7 @@ export class OrderCotroller {
             res.status(400).json({ errors: result.array() });
             return;
         }
-        const idempotencyKey = req.headers["idempotency-key"];
-        if (!idempotencyKey) {
-            const err = createHttpError(400, "Idempotency key is required");
-            throw err;
-        }
-        const idempotency = await this.idempotencyService.getIdempotencyKey(
-            idempotencyKey[0],
-        );
-        console.log(idempotency);
-        // if (!idempotency) {
-        //     await this.idempotencyService.createIdempotencyKey(idempotencyKey[0]);
-        // }
+
         const body = req.body as OrderRequest;
         const {
             cart,
@@ -68,23 +59,61 @@ export class OrderCotroller {
             (priceAfterDiscount * TAXES_PERCENT) / 100,
         );
         const finalPrice = priceAfterDiscount + taxesAmount + DELIVERY_CHARGES;
-        const newOrder = await this.orderService.createOrder({
-            cart,
-            address,
-            comment,
-            customerId,
-            deliveryCharges: DELIVERY_CHARGES,
-            discount: discountAmount,
-            taxes: taxesAmount,
-            total: finalPrice,
-            tenantId,
-            orderStatus: OrderStatusEnum.RECEIVED,
-            paymentMode:
-                PaymentModeEnum[paymentMode as keyof typeof PaymentModeEnum],
-            paymentStatus: PaymentStatusEnum.PENDING,
-        });
 
-        return res.json({ id: newOrder._id });
+        const idempotencyKey = req.headers["idempotency-key"] as string;
+
+        if (!idempotencyKey) {
+            const err = createHttpError(400, "Idempotency key is required");
+            throw err;
+        }
+        const idempotency =
+            await this.idempotencyService.getIdempotencyKey(idempotencyKey);
+        let newOrder: IOrder[] | [] = idempotency
+            ? [idempotency.response as IOrder]
+            : [];
+        if (!idempotency) {
+            const session = await mongoose.startSession();
+            session.startTransaction();
+            try {
+                newOrder = await this.orderService.createOrder(
+                    {
+                        cart,
+                        address,
+                        comment,
+                        customerId,
+                        deliveryCharges: DELIVERY_CHARGES,
+                        discount: discountAmount,
+                        taxes: taxesAmount,
+                        total: finalPrice,
+                        tenantId,
+                        orderStatus: OrderStatusEnum.RECEIVED,
+                        paymentMode:
+                            PaymentModeEnum[
+                                paymentMode as keyof typeof PaymentModeEnum
+                            ],
+                        paymentStatus: PaymentStatusEnum.PENDING,
+                    },
+                    session,
+                );
+                await this.idempotencyService.createIdempotencyKey(
+                    idempotencyKey,
+                    newOrder[0],
+                    session,
+                );
+                await session.commitTransaction();
+            } catch (error) {
+                await session.abortTransaction();
+                throw error;
+            } finally {
+                await session.endSession();
+            }
+        }
+        if (!newOrder) {
+            const err = createHttpError(400, "Error creating order");
+            throw err;
+        }
+
+        return res.json({ id: newOrder[0]._id });
     }
 
     private async calculateTotalPrice(cart: ICartItem[]) {

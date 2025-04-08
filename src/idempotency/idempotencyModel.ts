@@ -21,6 +21,8 @@ const idempotencySchema = new mongoose.Schema(
         timestamps: true,
     },
 );
+
+// TTL index to expire documents after 48 hours
 idempotencySchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 48 });
-idempotencySchema.index({ key: 1 }, { unique: true });
+
 export const Idempotency = mongoose.model("Idempotency", idempotencySchema);
