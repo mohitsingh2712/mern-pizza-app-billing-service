@@ -13,6 +13,7 @@ export class StripeGW implements PaymentGW {
     async createSession(options: PaymentOptions): Promise<PaymentSession> {
         const session = await this.stripe.checkout.sessions.create(
             {
+                billing_address_collection: "required",
                 metadata: {
                     orderId: options.orderId,
                 },
