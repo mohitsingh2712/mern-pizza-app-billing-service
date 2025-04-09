@@ -19,12 +19,14 @@ import { validationResult } from "express-validator";
 import { IdempotencyService } from "../idempotency/idempotencyService";
 import createHttpError from "http-errors";
 import mongoose from "mongoose";
+import { StripeGW } from "../payment/stripe";
 
 export class OrderCotroller {
     constructor(
         private couponService: CouponService,
         private orderService: OrderService,
         private idempotencyService: IdempotencyService,
+        private paymentGw: StripeGW,
     ) {}
     async create(req: Request, res: Response) {
         const result = validationResult(req);
@@ -113,7 +115,15 @@ export class OrderCotroller {
             throw err;
         }
 
-        return res.json({ id: newOrder[0]._id });
+        const session = await this.paymentGw.createSession({
+            idempotentKey: idempotencyKey,
+            amount: finalPrice,
+            orderId: String(newOrder[0]._id),
+            currency: "inr",
+            tenantId: newOrder[0].tenantId,
+        });
+
+        return res.json({ session });
     }
 
     private async calculateTotalPrice(cart: ICartItem[]) {

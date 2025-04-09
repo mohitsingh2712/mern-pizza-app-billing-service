@@ -1,4 +1,4 @@
-interface PaymentOptions {
+export interface PaymentOptions {
     currency?: "inr";
     amount: number;
     orderId: string;
@@ -6,9 +6,9 @@ interface PaymentOptions {
     idempotentKey: string;
 }
 type GatewayPaymentStatus = "no_payment_required" | "paid" | "unpaid";
-interface PaymentSession {
+export interface PaymentSession {
     id: string;
-    paymentUrl: string;
+    paymentUrl: string | null;
     paymentStatus: GatewayPaymentStatus;
 }
 interface CustomMetaData {
@@ -22,5 +22,5 @@ interface VerifiedSession {
 }
 export interface PaymentGW {
     createSession: (options: PaymentOptions) => Promise<PaymentSession>;
-    getSession: (id: string) => Promise<VerifiedSession>;
+    getSession?: (id: string) => Promise<VerifiedSession>;
 }
