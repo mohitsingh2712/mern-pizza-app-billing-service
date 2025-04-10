@@ -89,10 +89,7 @@ export class OrderCotroller {
                         total: finalPrice,
                         tenantId,
                         orderStatus: OrderStatusEnum.RECEIVED,
-                        paymentMode:
-                            PaymentModeEnum[
-                                paymentMode as keyof typeof PaymentModeEnum
-                            ],
+                        paymentMode: paymentMode as PaymentModeEnum,
                         paymentStatus: PaymentStatusEnum.PENDING,
                     },
                     session,

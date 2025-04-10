@@ -1,5 +1,11 @@
 import Stripe from "stripe";
-import { PaymentGW, PaymentOptions, PaymentSession } from "./paymentTypes";
+import {
+    CustomMetaData,
+    PaymentGW,
+    PaymentOptions,
+    PaymentSession,
+    VerifiedSession,
+} from "./paymentTypes";
 import config from "config";
 
 export class StripeGW implements PaymentGW {
@@ -43,7 +49,13 @@ export class StripeGW implements PaymentGW {
             paymentStatus: session.payment_status,
         };
     }
-    // async getSession(id: string) {
-    //     return null;
-    // }
+    async getSession(id: string) {
+        const session = await this.stripe.checkout.sessions.retrieve(id);
+        const verifiedSession: VerifiedSession = {
+            id: session.id,
+            metaData: session.metadata as unknown as CustomMetaData,
+            paymentStatus: session.payment_status,
+        };
+        return verifiedSession;
+    }
 }

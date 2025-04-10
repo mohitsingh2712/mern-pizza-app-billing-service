@@ -11,16 +11,16 @@ export interface PaymentSession {
     paymentUrl: string | null;
     paymentStatus: GatewayPaymentStatus;
 }
-interface CustomMetaData {
+export interface CustomMetaData {
     orderId: string;
 }
 
-interface VerifiedSession {
+export interface VerifiedSession {
     id: string;
     metaData: CustomMetaData;
     paymentStatus: GatewayPaymentStatus;
 }
 export interface PaymentGW {
     createSession: (options: PaymentOptions) => Promise<PaymentSession>;
-    getSession?: (id: string) => Promise<VerifiedSession>;
+    getSession: (id: string) => Promise<VerifiedSession>;
 }
