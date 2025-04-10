@@ -114,16 +114,21 @@ export class OrderCotroller {
             const err = createHttpError(400, "Error creating order");
             throw err;
         }
+        if ((body.paymentMode as PaymentModeEnum) === PaymentModeEnum.CARD) {
+            const session = await this.paymentGw.createSession({
+                idempotentKey: idempotencyKey,
+                amount: finalPrice,
+                orderId: String(newOrder[0]._id),
+                currency: "inr",
+                tenantId: newOrder[0].tenantId,
+            });
 
-        const session = await this.paymentGw.createSession({
-            idempotentKey: idempotencyKey,
-            amount: finalPrice,
-            orderId: String(newOrder[0]._id),
-            currency: "inr",
-            tenantId: newOrder[0].tenantId,
-        });
-
-        return res.json({ session });
+            return res.json({
+                paymentUrl: session.paymentUrl,
+                order: newOrder[0],
+            });
+        }
+        return res.json({ paymentUrl: null, order: newOrder[0] });
     }
 
     private async calculateTotalPrice(cart: ICartItem[]) {
