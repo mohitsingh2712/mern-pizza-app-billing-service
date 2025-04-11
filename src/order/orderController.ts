@@ -19,14 +19,16 @@ import { validationResult } from "express-validator";
 import { IdempotencyService } from "../idempotency/idempotencyService";
 import createHttpError from "http-errors";
 import mongoose from "mongoose";
-import { StripeGW } from "../payment/stripe";
+import { PaymentGW } from "../payment/paymentTypes";
+import { MessageBroker } from "../types/broker";
 
 export class OrderCotroller {
     constructor(
         private couponService: CouponService,
         private orderService: OrderService,
         private idempotencyService: IdempotencyService,
-        private paymentGw: StripeGW,
+        private paymentGw: PaymentGW,
+        private broker: MessageBroker,
     ) {}
     async create(req: Request, res: Response) {
         const result = validationResult(req);
@@ -119,12 +121,20 @@ export class OrderCotroller {
                 currency: "inr",
                 tenantId: newOrder[0].tenantId,
             });
+            await this.broker.sendMessage(
+                "billing",
+                JSON.stringify(newOrder[0]),
+            );
 
             return res.json({
                 paymentUrl: session.paymentUrl,
                 order: newOrder[0],
             });
         }
+        await this.broker.sendMessage("billing", JSON.stringify(newOrder[0]));
+        res.status(200).json({
+            message: "Webhook received",
+        });
         return res.json({ paymentUrl: null, order: newOrder[0] });
     }
 

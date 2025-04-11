@@ -2,11 +2,13 @@ import { Request, Response } from "express";
 import { PaymentGW } from "./paymentTypes";
 import { OrderService } from "../order/orderService";
 import { PaymentStatusEnum } from "../order/orderTypes";
+import { MessageBroker } from "../types/broker";
 
 export class PaymentController {
     constructor(
         private paymentGw: PaymentGW,
         private orderService: OrderService,
+        private broker: MessageBroker,
     ) {}
     async handleWebhook(req: Request, res: Response) {
         const webhookBody = req.body as Record<string, unknown>;
@@ -31,6 +33,7 @@ export class PaymentController {
                 data: updateOrder,
             });
         }
+        await this.broker.sendMessage("billing", JSON.stringify(webhookBody));
         res.status(200).json({
             message: "Webhook received",
         });
