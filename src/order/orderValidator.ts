@@ -131,21 +131,12 @@ export const createOrderValidator = checkSchema({
     },
     customerId: {
         in: ["body"],
-        exists: {
-            errorMessage: "Customer ID is required",
-        },
         notEmpty: {
             errorMessage: "Customer ID cannot be empty",
-        },
-        isMongoId: {
-            errorMessage: "Customer ID must be a valid Mongo ID",
         },
     },
     tenantId: {
         in: ["body"],
-        exists: {
-            errorMessage: "Tenant ID is required",
-        },
         notEmpty: {
             errorMessage: "Tenant ID cannot be empty",
         },
@@ -155,14 +146,11 @@ export const createOrderValidator = checkSchema({
     },
     paymentMode: {
         in: ["body"],
-        exists: {
-            errorMessage: "Payment mode is required",
-        },
         notEmpty: {
             errorMessage: "Payment mode cannot be empty",
         },
         isIn: {
-            options: [["cash", "card", "upi", "wallet"]], // adjust these values as per your PaymentModeEnum
+            options: [["cash", "card"]],
             errorMessage: "Invalid payment mode",
         },
     },
