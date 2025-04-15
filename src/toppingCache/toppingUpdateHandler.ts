@@ -16,7 +16,7 @@ export const handleToppingUpdate = async (value?: string) => {
         topping = JSON.parse(value) as ITopping;
     } catch (error) {
         console.error("Error parsing product update message", error);
-        return; // Return early if parsing fails
+        return;
     }
 
     if (!topping?._id || !topping?.price || !topping?.tenantId) {
