@@ -20,4 +20,7 @@ export class OrderService {
     async getOrdersByCustomerId(id: string) {
         return await OrderModel.find({ customerId: id }, { cart: 0 });
     }
+    async getOrderById(id: string) {
+        return await OrderModel.findById(id);
+    }
 }
