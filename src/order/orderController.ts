@@ -21,6 +21,7 @@ import createHttpError from "http-errors";
 import mongoose from "mongoose";
 import { PaymentGW } from "../payment/paymentTypes";
 import { MessageBroker } from "../types/broker";
+import { CustomerService } from "../customer/customerService";
 
 export class OrderCotroller {
     constructor(
@@ -29,6 +30,7 @@ export class OrderCotroller {
         private idempotencyService: IdempotencyService,
         private paymentGw: PaymentGW,
         private broker: MessageBroker,
+        private customerService: CustomerService,
     ) {}
     async create(req: Request, res: Response) {
         const result = validationResult(req);
@@ -136,6 +138,26 @@ export class OrderCotroller {
             message: "Webhook received",
         });
         return res.json({ paymentUrl: null, order: newOrder[0] });
+    }
+
+    async getOrders(req: Request, res: Response) {
+        const userId = req.auth?.sub;
+        if (!userId) {
+            const err = createHttpError(400, "User id is required");
+            throw err;
+        }
+        const customer = await this.customerService.getCustomer(userId);
+        if (!customer || !("_id" in customer)) {
+            const err = createHttpError(400, "Customer not found or invalid");
+            throw err;
+        }
+
+        const orders = await this.orderService.getOrdersByCustomerId(
+            customer._id as string,
+        );
+        res.status(200).json({
+            orders,
+        });
     }
 
     private async calculateTotalPrice(cart: ICartItem[]) {

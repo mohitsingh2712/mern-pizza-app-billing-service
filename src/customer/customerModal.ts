@@ -5,6 +5,7 @@ export interface IAddress {
     isDefault: boolean;
 }
 export interface ICustomer {
+    _id?: string;
     userId: string;
     firstName: string;
     lastName: string;

@@ -16,4 +16,8 @@ export class OrderService {
             { new: true },
         );
     }
+
+    async getOrdersByCustomerId(id: string) {
+        return await OrderModel.find({ customerId: id }, { cart: 0 });
+    }
 }

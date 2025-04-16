@@ -7,13 +7,15 @@ import { createOrderValidator } from "./orderValidator";
 import { IdempotencyService } from "../idempotency/idempotencyService";
 import { StripeGW } from "../payment/stripe";
 import { createMessageBroker } from "../common/factories/brokerFactory";
-// import authenticate from "../common/middlewares/authenticate";
+import authenticate from "../common/middlewares/authenticate";
+import { CustomerService } from "../customer/customerService";
 
 const router = express.Router();
 const paymentGw = new StripeGW();
 const couponservice = new CouponService();
 const orderService = new OrderService();
 const idempotencyService = new IdempotencyService();
+const customerService = new CustomerService();
 const broker = createMessageBroker();
 const orderController = new OrderCotroller(
     couponservice,
@@ -21,6 +23,7 @@ const orderController = new OrderCotroller(
     idempotencyService,
     paymentGw,
     broker,
+    customerService,
 );
 
 router.post(
@@ -28,6 +31,11 @@ router.post(
     createOrderValidator,
     // authenticate,
     asyncWraper(orderController.create.bind(orderController)),
+);
+router.get(
+    "/orders/mine",
+    authenticate,
+    asyncWraper(orderController.getOrders.bind(orderController)),
 );
 
 export default router;
