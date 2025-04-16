@@ -20,7 +20,11 @@ export class OrderService {
     async getOrdersByCustomerId(id: string) {
         return await OrderModel.find({ customerId: id }, { cart: 0 });
     }
-    async getOrderById(id: string) {
-        return await OrderModel.findById(id);
+    async getOrderById(id: string, customerId?: string) {
+        return await OrderModel.findOne(
+            { _id: id },
+            { cart: 0 },
+            { customerId: customerId },
+        ).populate(customerId ? "customerId" : "");
     }
 }

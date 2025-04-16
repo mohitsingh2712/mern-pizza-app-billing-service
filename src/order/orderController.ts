@@ -160,6 +160,32 @@ export class OrderCotroller {
         });
     }
 
+    async getOrder(req: Request, res: Response) {
+        const userId = req.auth?.sub;
+        const orderId = req.params.id;
+        if (!orderId) {
+            const err = createHttpError(400, "Order id is required");
+            throw err;
+        }
+        if (!userId) {
+            const err = createHttpError(400, "User id is required");
+            throw err;
+        }
+        const customer = await this.customerService.getCustomer(userId);
+        if (!customer || !("_id" in customer)) {
+            const err = createHttpError(400, "Customer not found or invalid");
+            throw err;
+        }
+
+        const order = await this.orderService.getOrderById(
+            orderId,
+            customer._id as string,
+        );
+        res.status(200).json({
+            order,
+        });
+    }
+
     private async calculateTotalPrice(cart: ICartItem[]) {
         const productIds = cart.map((item) => item._id);
         const productPricings = await ProductPricingCache.find({
