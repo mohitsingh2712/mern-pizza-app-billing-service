@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-base-to-string */
 /* eslint-disable no-console */
-import { Response } from "express";
+import { NextFunction, Response } from "express";
 import { Request } from "express-jwt";
 import { ICartItem, ITopping, OrderRequest } from "../types";
 import {
@@ -153,15 +154,20 @@ export class OrderCotroller {
         }
 
         const orders = await this.orderService.getOrdersByCustomerId(
-            customer._id as string,
+            customer._id!,
         );
         res.status(200).json({
             orders,
         });
     }
 
-    async getOrder(req: Request, res: Response) {
-        const userId = req.auth?.sub;
+    async getOrder(req: Request, res: Response, next: NextFunction) {
+        const {
+            sub: userId,
+            role,
+            tenantId,
+        } = req.auth as Record<string, string>;
+        console.log(userId, role, tenantId);
         const orderId = req.params.id;
         if (!orderId) {
             const err = createHttpError(400, "Order id is required");
@@ -171,19 +177,42 @@ export class OrderCotroller {
             const err = createHttpError(400, "User id is required");
             throw err;
         }
-        const customer = await this.customerService.getCustomer(userId);
-        if (!customer || !("_id" in customer)) {
-            const err = createHttpError(400, "Customer not found or invalid");
+        const order = await this.orderService.getOrderById(orderId);
+        if (!order) {
+            const err = createHttpError(400, "Order not found");
             throw err;
         }
+        if (role === "admin") {
+            return res.status(200).json({
+                order,
+            });
+        }
+        const myRestaurantOrder = order.tenantId.toString() === tenantId;
 
-        const order = await this.orderService.getOrderById(
-            orderId,
-            customer._id as string,
+        if (role === "manager" && myRestaurantOrder) {
+            return res.status(200).json({
+                order,
+            });
+        }
+        if (role === "customer") {
+            const customer = await this.customerService.getCustomer(userId);
+
+            if (!customer || !("_id" in customer)) {
+                const err = createHttpError(
+                    400,
+                    "Customer not found or invalid",
+                );
+                throw err;
+            }
+            if (order.customerId.toString() === customer._id!.toString()) {
+                return res.status(200).json({
+                    order,
+                });
+            }
+        }
+        return next(
+            createHttpError(403, "You are not authorized to access this order"),
         );
-        res.status(200).json({
-            order,
-        });
     }
 
     private async calculateTotalPrice(cart: ICartItem[]) {

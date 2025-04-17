@@ -1,11 +1,11 @@
-import mongoose from "mongoose";
+import mongoose, { ObjectId } from "mongoose";
 
 export interface IAddress {
     text: string;
     isDefault: boolean;
 }
 export interface ICustomer {
-    _id?: string;
+    _id?: ObjectId;
     userId: string;
     firstName: string;
     lastName: string;

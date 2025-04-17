@@ -1,4 +1,4 @@
-import { ClientSession } from "mongoose";
+import { ClientSession, ObjectId } from "mongoose";
 import { OrderModel } from "./orderModal";
 import { IOrder } from "./orderTypes";
 
@@ -17,14 +17,15 @@ export class OrderService {
         );
     }
 
-    async getOrdersByCustomerId(id: string) {
+    async getOrdersByCustomerId(id: ObjectId) {
         return await OrderModel.find({ customerId: id }, { cart: 0 });
     }
-    async getOrderById(id: string, customerId?: string) {
-        return await OrderModel.findOne(
-            { _id: id },
-            { cart: 0 },
-            { customerId: customerId },
-        ).populate(customerId ? "customerId" : "");
+    async getOrderByIdWithCustomer(id: string, customerId?: string) {
+        return await OrderModel.findOne({ _id: id }, { cart: 0 }).populate(
+            customerId ? "customerId" : "",
+        );
+    }
+    async getOrderById(id: string) {
+        return await OrderModel.findOne({ _id: id }, { cart: 0 });
     }
 }
