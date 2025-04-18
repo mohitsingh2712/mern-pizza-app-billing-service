@@ -1,5 +1,6 @@
 import { ObjectId } from "mongoose";
 import { ICartItem } from "../types";
+import { ICustomer } from "../customer/customerModal";
 export enum PaymentModeEnum {
     CARD = "card",
     CASH = "cash",
@@ -22,7 +23,7 @@ export enum PaymentStatusEnum {
 export interface IOrder {
     _id?: ObjectId;
     cart: ICartItem[];
-    customerId: ObjectId;
+    customerId: ObjectId | ICustomer;
     total: number;
     discount: number;
     deliveryCharges: number;

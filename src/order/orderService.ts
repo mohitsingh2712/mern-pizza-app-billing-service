@@ -28,4 +28,12 @@ export class OrderService {
     async getOrderById(id: string) {
         return await OrderModel.findOne({ _id: id }, { cart: 0 });
     }
+    async getOrderByIdWithProjection(
+        id: string,
+        projection: Record<string, number>,
+    ) {
+        return await OrderModel.findOne({ _id: id }, projection).populate(
+            "customerId",
+        );
+    }
 }

@@ -23,6 +23,7 @@ import mongoose from "mongoose";
 import { PaymentGW } from "../payment/paymentTypes";
 import { MessageBroker } from "../types/broker";
 import { CustomerService } from "../customer/customerService";
+import { ICustomer } from "../customer/customerModal";
 
 export class OrderCotroller {
     constructor(
@@ -162,11 +163,22 @@ export class OrderCotroller {
     }
 
     async getOrder(req: Request, res: Response, next: NextFunction) {
+        console.log(req.query.fields);
         const {
             sub: userId,
             role,
             tenantId,
         } = req.auth as Record<string, string>;
+        const fields = req.query.fields
+            ? req?.query?.fields?.toString().split(",")
+            : []; //[orderStatus,paymentStatus]
+        const projection = fields.reduce(
+            (acc, field) => {
+                acc[field] = 1;
+                return acc;
+            },
+            { customerId: 1 } as Record<string, number>,
+        );
 
         const orderId = req.params.id;
         if (!orderId) {
@@ -177,7 +189,11 @@ export class OrderCotroller {
             const err = createHttpError(400, "User id is required");
             throw err;
         }
-        const order = await this.orderService.getOrderById(orderId);
+        const order = await this.orderService.getOrderByIdWithProjection(
+            orderId,
+            projection,
+        );
+        console.log(order);
         if (!order) {
             const err = createHttpError(400, "Order not found");
             throw err;
@@ -204,7 +220,10 @@ export class OrderCotroller {
                 );
                 throw err;
             }
-            if (order.customerId.toString() === customer._id!.toString()) {
+            if (
+                (order.customerId as ICustomer)?._id?.toString() ===
+                customer._id?.toString()
+            ) {
                 return res.status(200).json({
                     order,
                 });
