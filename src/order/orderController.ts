@@ -167,7 +167,7 @@ export class OrderCotroller {
             role,
             tenantId,
         } = req.auth as Record<string, string>;
-        console.log(userId, role, tenantId);
+
         const orderId = req.params.id;
         if (!orderId) {
             const err = createHttpError(400, "Order id is required");
