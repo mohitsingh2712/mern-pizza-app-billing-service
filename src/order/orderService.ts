@@ -1,6 +1,7 @@
 import { ClientSession, ObjectId } from "mongoose";
 import { OrderModel } from "./orderModal";
 import { IOrder } from "./orderTypes";
+import { PaginateQuery } from "../types";
 
 export class OrderService {
     async createOrder(
@@ -35,5 +36,29 @@ export class OrderService {
         return await OrderModel.findOne({ _id: id }, projection).populate(
             "customerId",
         );
+    }
+
+    async getAllOrders(
+        filter: Record<string, string>,
+        paginateQuery: PaginateQuery,
+    ) {
+        const { page = 1, limit = 10 } = paginateQuery;
+
+        const skip = (Number(page) - 1) * Number(limit);
+
+        const [orders, total] = await Promise.all([
+            OrderModel.find(filter)
+                .populate("customerId")
+                .skip(skip)
+                .limit(Number(limit)),
+            OrderModel.countDocuments(filter),
+        ]);
+
+        return {
+            data: orders,
+            total,
+            pageSize: Number(limit),
+            currentPage: Number(page),
+        };
     }
 }
