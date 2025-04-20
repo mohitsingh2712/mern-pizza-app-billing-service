@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 import { NextFunction, Response } from "express";
 import { Request } from "express-jwt";
-import { ICartItem, ITopping, OrderRequest } from "../types";
+import { ICartItem, ITopping, OrderRequest, ROLES } from "../types";
 import {
     IProductPricingCache,
     ProductPricingCache,
@@ -142,6 +142,44 @@ export class OrderCotroller {
         return res.json({ paymentUrl: null, order: newOrder[0] });
     }
 
+    async getAllOrders(req: Request, res: Response) {
+        const { role } = req.auth as { sub: string; role: ROLES };
+        const tenantId = req.query.tenantId;
+        if (role === ROLES.CUSTOMER) {
+            const err = createHttpError(
+                400,
+                "Customer not allowed to access this endpoint",
+            );
+            throw err;
+        }
+        const paginateQuery = {
+            page: req.query.currentPage
+                ? parseInt(req.query.currentPage as string)
+                : 1,
+            limit: req.query.perPage
+                ? parseInt(req.query.perPage as string)
+                : 10,
+        };
+        if (role === ROLES.ADMIN) {
+            const filter: Record<string, string> = {};
+            if (tenantId) {
+                filter.tenantId = tenantId as string;
+            }
+            const orders = await this.orderService.getAllOrders(
+                filter,
+                paginateQuery,
+            );
+            return res.status(200).json(orders);
+        }
+        if (role === ROLES.MANGER) {
+            const orders = await this.orderService.getAllOrders(
+                { tenantId: tenantId as string },
+                paginateQuery,
+            );
+            return res.status(200).json(orders);
+        }
+    }
+
     async getOrders(req: Request, res: Response) {
         const userId = req.auth?.sub;
         if (!userId) {
@@ -168,7 +206,7 @@ export class OrderCotroller {
             sub: userId,
             role,
             tenantId,
-        } = req.auth as Record<string, string>;
+        } = req.auth as { sub: string; role: ROLES; tenantId: string };
         const fields = req.query.fields
             ? req?.query?.fields?.toString().split(",")
             : []; //[orderStatus,paymentStatus]
@@ -193,24 +231,23 @@ export class OrderCotroller {
             orderId,
             projection,
         );
-        console.log(order);
         if (!order) {
             const err = createHttpError(400, "Order not found");
             throw err;
         }
-        if (role === "admin") {
+        if (role === ROLES.ADMIN) {
             return res.status(200).json({
                 order,
             });
         }
         const myRestaurantOrder = order.tenantId.toString() === tenantId;
 
-        if (role === "manager" && myRestaurantOrder) {
+        if (role === ROLES.MANGER && myRestaurantOrder) {
             return res.status(200).json({
                 order,
             });
         }
-        if (role === "customer") {
+        if (role === ROLES.CUSTOMER) {
             const customer = await this.customerService.getCustomer(userId);
 
             if (!customer || !("_id" in customer)) {

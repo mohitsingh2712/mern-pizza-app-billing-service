@@ -43,4 +43,10 @@ router.get(
     asyncWraper(orderController.getOrder.bind(orderController)),
 );
 
+router.get(
+    "/",
+    authenticate,
+    asyncWraper(orderController.getAllOrders.bind(orderController)),
+);
+
 export default router;
