@@ -58,3 +58,14 @@ export interface OrderRequest {
     customerId: ObjectId;
     paymentMode: string;
 }
+
+export enum ROLES {
+    ADMIN = "admin",
+    CUSTOMER = "customer",
+    MANGER = "manager",
+}
+
+export interface PaginateQuery {
+    page: number;
+    limit: number;
+}
