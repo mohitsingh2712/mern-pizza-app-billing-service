@@ -49,7 +49,7 @@ router.get(
     authenticate,
     asyncWraper(orderController.getAllOrders.bind(orderController)),
 );
-router.get(
+router.patch(
     "/changeStatus/:id",
     orderStatusValidator,
     authenticate,
