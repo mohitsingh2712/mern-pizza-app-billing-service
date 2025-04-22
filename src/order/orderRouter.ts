@@ -9,6 +9,7 @@ import { StripeGW } from "../payment/stripe";
 import { createMessageBroker } from "../common/factories/brokerFactory";
 import authenticate from "../common/middlewares/authenticate";
 import { CustomerService } from "../customer/customerService";
+import { orderStatusValidator } from "./orderStatusValidator";
 
 const router = express.Router();
 const paymentGw = new StripeGW();
@@ -50,6 +51,7 @@ router.get(
 );
 router.get(
     "/changeStatus/:id",
+    orderStatusValidator,
     authenticate,
     asyncWraper(orderController.changeStatus.bind(orderController)),
 );
