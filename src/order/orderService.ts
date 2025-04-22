@@ -64,7 +64,7 @@ export class OrderService {
     async updateOrderStatus(id: string, status: string) {
         return await OrderModel.findOneAndUpdate(
             { _id: id },
-            { status },
+            { orderStatus: status },
             { new: true },
         );
     }
