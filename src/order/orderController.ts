@@ -270,6 +270,33 @@ export class OrderCotroller {
             createHttpError(403, "You are not authorized to access this order"),
         );
     }
+    async changeStatus(req: Request, res: Response) {
+        const { role } = req.auth as { sub: string; role: ROLES };
+        const orderId = req.params.id;
+        const { status } = req.body as { status: OrderStatusEnum };
+        if (!orderId) {
+            const err = createHttpError(400, "Order id is required");
+            throw err;
+        }
+        if (!status) {
+            const err = createHttpError(400, "Status is required");
+            throw err;
+        }
+        if (role !== ROLES.MANGER && role !== ROLES.ADMIN) {
+            const err = createHttpError(
+                400,
+                "Only manager or admin can change the order status",
+            );
+            throw err;
+        }
+        const order = await this.orderService.updateOrderStatus(
+            orderId,
+            status,
+        );
+        res.status(200).json({
+            order,
+        });
+    }
 
     private async calculateTotalPrice(cart: ICartItem[]) {
         const productIds = cart.map((item) => item._id);

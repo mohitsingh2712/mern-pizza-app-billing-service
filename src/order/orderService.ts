@@ -61,4 +61,11 @@ export class OrderService {
             currentPage: Number(page),
         };
     }
+    async updateOrderStatus(id: string, status: string) {
+        return await OrderModel.findOneAndUpdate(
+            { _id: id },
+            { status },
+            { new: true },
+        );
+    }
 }
