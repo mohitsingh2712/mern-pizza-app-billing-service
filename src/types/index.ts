@@ -69,3 +69,9 @@ export interface PaginateQuery {
     page: number;
     limit: number;
 }
+
+export enum OrderEvents {
+    ORDER_CREATE = "order_create",
+    PAYMENT_STATUS_UPDATE = "payment_status_update",
+    ORDER_STATUS_UPDATE = "order_status_update",
+}
