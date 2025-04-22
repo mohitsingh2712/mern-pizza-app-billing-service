@@ -305,6 +305,10 @@ export class OrderCotroller {
             throw err;
         }
         const order = await this.orderService.getOrderById(orderId);
+        if (!order) {
+            const err = createHttpError(400, "Order not found");
+            throw err;
+        }
         const isMyRestaurantOrder = order?.tenantId === tenant;
         if (role === ROLES.MANGER && !isMyRestaurantOrder) {
             const err = createHttpError(
@@ -316,6 +320,16 @@ export class OrderCotroller {
         const updatedOrder = await this.orderService.updateOrderStatus(
             orderId,
             status,
+        );
+
+        const brokerMessage = {
+            event_type: OrderEvents.ORDER_STATUS_UPDATE,
+            data: updatedOrder,
+        };
+        await this.broker.sendMessage(
+            "billing",
+            JSON.stringify(brokerMessage),
+            updatedOrder!._id.toString(),
         );
         res.status(200).json({
             updatedOrder,
