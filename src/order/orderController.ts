@@ -271,7 +271,7 @@ export class OrderCotroller {
         );
     }
     async changeStatus(req: Request, res: Response) {
-        const { role } = req.auth as { sub: string; role: ROLES };
+        const { role, tenant } = req.auth as { tenant: string; role: ROLES };
         const orderId = req.params.id;
         const { status } = req.body as { status: OrderStatusEnum };
         if (!orderId) {
@@ -289,12 +289,21 @@ export class OrderCotroller {
             );
             throw err;
         }
-        const order = await this.orderService.updateOrderStatus(
+        const order = await this.orderService.getOrderById(orderId);
+        const isMyRestaurantOrder = order?.tenantId === tenant;
+        if (role === ROLES.MANGER && !isMyRestaurantOrder) {
+            const err = createHttpError(
+                400,
+                "You are not allowed to change the order status",
+            );
+            throw err;
+        }
+        const updatedOrder = await this.orderService.updateOrderStatus(
             orderId,
             status,
         );
         res.status(200).json({
-            order,
+            updatedOrder,
         });
     }
 
