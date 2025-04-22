@@ -2,7 +2,13 @@
 /* eslint-disable no-console */
 import { NextFunction, Response } from "express";
 import { Request } from "express-jwt";
-import { ICartItem, ITopping, OrderRequest, ROLES } from "../types";
+import {
+    ICartItem,
+    ITopping,
+    OrderEvents,
+    OrderRequest,
+    ROLES,
+} from "../types";
 import {
     IProductPricingCache,
     ProductPricingCache,
@@ -117,6 +123,10 @@ export class OrderCotroller {
             const err = createHttpError(400, "Error creating order");
             throw err;
         }
+        const brokerMessage = {
+            event_type: OrderEvents.ORDER_CREATE,
+            data: newOrder[0],
+        };
         if ((body.paymentMode as PaymentModeEnum) === PaymentModeEnum.CARD) {
             const session = await this.paymentGw.createSession({
                 idempotentKey: idempotencyKey,
@@ -127,7 +137,8 @@ export class OrderCotroller {
             });
             await this.broker.sendMessage(
                 "billing",
-                JSON.stringify(newOrder[0]),
+                JSON.stringify(brokerMessage),
+                newOrder[0]._id!.toString(),
             );
 
             return res.json({
@@ -135,7 +146,11 @@ export class OrderCotroller {
                 order: newOrder[0],
             });
         }
-        await this.broker.sendMessage("billing", JSON.stringify(newOrder[0]));
+        await this.broker.sendMessage(
+            "billing",
+            JSON.stringify(brokerMessage),
+            newOrder[0]._id!.toString(),
+        );
         res.status(200).json({
             message: "Webhook received",
         });
