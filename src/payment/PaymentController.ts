@@ -3,6 +3,7 @@ import { PaymentGW } from "./paymentTypes";
 import { OrderService } from "../order/orderService";
 import { PaymentStatusEnum } from "../order/orderTypes";
 import { MessageBroker } from "../types/broker";
+import { OrderEvents } from "../types";
 
 export class PaymentController {
     constructor(
@@ -20,7 +21,7 @@ export class PaymentController {
             const isPaymentSuccess =
                 verifiedSession.paymentStatus === "paid" ||
                 verifiedSession.paymentStatus === "no_payment_required";
-            const updateOrder =
+            const updatedOrder =
                 await this.orderService.updateOrderPaymentStatus(
                     verifiedSession.metaData.orderId,
                     isPaymentSuccess
@@ -28,13 +29,18 @@ export class PaymentController {
                         : PaymentStatusEnum.FAILED,
                 );
 
-            return res.status(200).json({
-                message: "Payment status updated",
-                data: updateOrder,
-            });
+            const brokerMessage = {
+                event_type: OrderEvents.PAYMENT_STATUS_UPDATE,
+                data: updatedOrder,
+            };
+
+            await this.broker.sendMessage(
+                "order",
+                JSON.stringify(brokerMessage),
+                verifiedSession.metaData.orderId,
+            );
         }
-        await this.broker.sendMessage("billing", JSON.stringify(webhookBody));
-        res.status(200).json({
+        return res.status(200).json({
             message: "Webhook received",
         });
     }
