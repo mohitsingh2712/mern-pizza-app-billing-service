@@ -75,3 +75,38 @@ export enum OrderEvents {
     PAYMENT_STATUS_UPDATE = "PAYMENT_STATUS_UPDATE",
     ORDER_STATUS_UPDATE = "ORDER_STATUS_UPDATE",
 }
+
+export enum ProductEvents {
+    PRODUCT_CREATE = "PRODUCT_CREATE",
+    PRODUCT_UPDATE = "PRODUCT_UPDATE",
+    PRODUCT_DELETE = "PRODUCT_DELETE",
+}
+
+export interface ProductMessage {
+    event_type: ProductEvents;
+    data: {
+        _id: string;
+        priceConfiguration: ProductPriceConfiguration;
+    };
+}
+
+export interface ToppingPriceCache {
+    _id: ObjectId;
+    toppingId: string;
+    price: number;
+    tenantId: string;
+}
+
+export enum ToppingEvents {
+    TOPPING_CREATE = "TOPPING_CREATE",
+    TOPPING_UPDATE = "TOPPING_UPDATE",
+    TOPPING_DELETE = "TOPPING_DELETE",
+}
+export interface ToppingMessage {
+    event_type: ToppingEvents;
+    data: {
+        _id: string;
+        price: number;
+        tenantId: string;
+    };
+}
