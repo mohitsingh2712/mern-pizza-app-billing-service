@@ -1,9 +1,7 @@
-import { IToppingCache, ToppingCache } from "./toppingCacheModel";
+import { ToppingMessage } from "../types";
+import { ToppingCache } from "./toppingCacheModel";
 
 /* eslint-disable no-console */
-interface ITopping extends IToppingCache {
-    _id: string;
-}
 
 export const handleToppingUpdate = async (value?: string) => {
     if (!value) {
@@ -11,22 +9,31 @@ export const handleToppingUpdate = async (value?: string) => {
         return;
     }
 
-    let topping: ITopping | undefined;
+    let topping: ToppingMessage | undefined;
     try {
-        topping = JSON.parse(value) as ITopping;
+        topping = JSON.parse(value) as ToppingMessage;
     } catch (error) {
         console.error("Error parsing product update message", error);
         return;
     }
 
-    if (!topping?._id || !topping?.price || !topping?.tenantId) {
+    if (
+        !topping?.data?._id ||
+        !topping?.data?.price ||
+        !topping?.data?.tenantId
+    ) {
         console.error("Missing required topping fields", topping);
         return;
     }
 
     return await ToppingCache.updateOne(
-        { toppingId: topping._id }, // Filter
-        { $set: { price: topping.price, tenantId: topping.tenantId } }, // Update operation
+        { toppingId: topping.data._id }, // Filter
+        {
+            $set: {
+                price: topping.data.price,
+                tenantId: topping.data.tenantId,
+            },
+        }, // Update operation
         { upsert: true }, // Options
     );
 };
