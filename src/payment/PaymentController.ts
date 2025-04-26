@@ -35,7 +35,7 @@ export class PaymentController {
             };
 
             await this.broker.sendMessage(
-                "order",
+                "billing",
                 JSON.stringify(brokerMessage),
                 verifiedSession.metaData.orderId,
             );

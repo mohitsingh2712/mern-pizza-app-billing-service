@@ -151,9 +151,7 @@ export class OrderCotroller {
             JSON.stringify(brokerMessage),
             newOrder[0]._id!.toString(),
         );
-        res.status(200).json({
-            message: "Webhook received",
-        });
+
         return res.json({ paymentUrl: null, order: newOrder[0] });
     }
 
