@@ -123,9 +123,12 @@ export class OrderCotroller {
             const err = createHttpError(400, "Error creating order");
             throw err;
         }
+        const customer = await this.customerService.getCustomer(
+            String(newOrder[0].customerId),
+        );
         const brokerMessage = {
             event_type: OrderEvents.ORDER_CREATE,
-            data: newOrder[0],
+            data: { ...newOrder[0], customerId: customer },
         };
         if ((body.paymentMode as PaymentModeEnum) === PaymentModeEnum.CARD) {
             const session = await this.paymentGw.createSession({
