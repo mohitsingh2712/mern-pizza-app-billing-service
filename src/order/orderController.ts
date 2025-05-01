@@ -322,10 +322,13 @@ export class OrderCotroller {
             orderId,
             status,
         );
+        const customer = await this.customerService.getCustomer(
+            String(updatedOrder!.customerId),
+        );
 
         const brokerMessage = {
             event_type: OrderEvents.ORDER_STATUS_UPDATE,
-            data: updatedOrder,
+            data: { ...updatedOrder?.toObject(), customerId: customer },
         };
         await this.broker.sendMessage(
             "billing",

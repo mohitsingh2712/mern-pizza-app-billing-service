@@ -4,12 +4,14 @@ import { OrderService } from "../order/orderService";
 import { PaymentStatusEnum } from "../order/orderTypes";
 import { MessageBroker } from "../types/broker";
 import { OrderEvents } from "../types";
+import { CustomerService } from "../customer/customerService";
 
 export class PaymentController {
     constructor(
         private paymentGw: PaymentGW,
         private orderService: OrderService,
         private broker: MessageBroker,
+        private customerService: CustomerService,
     ) {}
     async handleWebhook(req: Request, res: Response) {
         const webhookBody = req.body as Record<string, unknown>;
@@ -28,10 +30,13 @@ export class PaymentController {
                         ? PaymentStatusEnum.PAID
                         : PaymentStatusEnum.FAILED,
                 );
+            const customer = await this.customerService.getCustomer(
+                String(updatedOrder!.customerId),
+            );
 
             const brokerMessage = {
                 event_type: OrderEvents.PAYMENT_STATUS_UPDATE,
-                data: updatedOrder,
+                data: { ...updatedOrder!.toObject(), customerId: customer },
             };
 
             await this.broker.sendMessage(
