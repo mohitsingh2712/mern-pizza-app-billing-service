@@ -1,15 +1,39 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-console */
-import { Consumer, EachMessagePayload, Kafka, Producer } from "kafkajs";
+import {
+    Consumer,
+    EachMessagePayload,
+    Kafka,
+    KafkaConfig,
+    Producer,
+} from "kafkajs";
 import { MessageBroker } from "../types/broker";
 import { handleProductUpdate } from "../productCache/productUpdateHandler";
 import { handleToppingUpdate } from "../toppingCache/toppingUpdateHandler";
+import config from "config";
 
 export class KafkaBroker implements MessageBroker {
     private consumer: Consumer;
     private producer: Producer;
     constructor(clientId: string, brokers: string[]) {
-        const kafka = new Kafka({ clientId, brokers });
+        let kafkaConfig: KafkaConfig = {
+            clientId: clientId,
+            brokers: brokers,
+        };
+        if (config.get("NODE_ENV") === "production") {
+            kafkaConfig = {
+                ...kafkaConfig,
+                ssl: true,
+                connectionTimeout: 45000,
+                sasl: {
+                    mechanism: "plain",
+                    username: config.get("kafka.sasl.username"),
+                    password: config.get("kafka.sasl.password"),
+                },
+            };
+        }
+        const kafka = new Kafka(kafkaConfig);
+        this.producer = kafka.producer();
         this.consumer = kafka.consumer({ groupId: clientId });
         this.producer = kafka.producer();
     }
